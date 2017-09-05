@@ -6,9 +6,9 @@ File Info:
 GraphicsLabFramework.zip (size: 730KB)  
 
 Useful for:  
-- Writing lab programs in a first course for computer graphics  (pixel, line, polygons, circle, filling, clipping etc.)
+- Writing lab programs in a first course for computer graphics  (pixel, line, polygons, circle, filling, clipping, transforms etc.)
 - Writing raytracers  
-- Writing programs for curves  
+- Writing programs for advanced curves  
 - Writing software rasterizers   
 - Writing image processing routines
 - and so on.  
@@ -20,15 +20,15 @@ in order to run the program.
   
 Core:  
 The core of this program is a function which calls  
-a display callback (which may modify a pixel array)   
-and renders the pixels to a screen aligned quad.  
+a display callback (which may modify a the framebuffer pixel array)   
+and renders the framebuffer pixel array to a screen aligned quad.  
   
 Facilities:  
 Access to Display Context and Frame buffer  
 Callback function support for Display and Input  
 Drawing Lines and Rectangles  
 Reading and Writing PPM files   
-Writing framebuffer to PPM file    
+Writing the framebuffer to PPM file    
 Generating Procedural Image (Checker and Gradient)  
 Copying pixels to framebuffer with alpha blending  
   
