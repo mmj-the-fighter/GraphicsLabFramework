@@ -1,6 +1,9 @@
 # GraphicsLabFramework
 A cross platform framework for implementing and  
 studying basic algorithms in computer graphics.  
+  
+License:  
+MIT License  
 
 File Info:  
 GraphicsLabFramework.zip (size: 730KB)  
@@ -21,7 +24,7 @@ in order to run the program.
   
 Note:  
 Images format used for this project is PPM.  
-You may need programs like GIMP, IrfanView or Photoshop to view PPM files.  
+You may need programs like GIMP, IrfanView or Photoshop to work with PPM files.  
   
 Core:  
 The core of this program is a function which calls  
