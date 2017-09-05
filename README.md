@@ -6,17 +6,22 @@ File Info:
 GraphicsLabFramework.zip (size: 730KB)  
 
 Useful for:  
-- Writing lab programs in a first course for computer graphics  (pixel, line, polygons, circle, filling, clipping, transforms etc.)
+- Writing lab programs in a first course for computer graphics  
+  (pixels, lines, polygons, circles,  ellipses, filling, clipping, transforms etc.)  
 - Writing raytracers  
 - Writing programs for advanced curves  
 - Writing software rasterizers   
-- Writing image processing routines
+- Writing image processing routines  
 - and so on.  
   
 Building:  
 You need to make a project using the files in the repository  
 and resolve dependencies with SDL2 Library (available at https://www.libsdl.org)  
 in order to run the program.  
+  
+Note:  
+Images format used for this project is PPM.  
+You may need programs like GIMP, IrfanView or Photoshop to view PPM files.  
   
 Core:  
 The core of this program is a function which calls  
