@@ -1,7 +1,10 @@
 # GraphicsLabFramework
 A cross platform framework for implementing and  
 studying basic algorithms in computer graphics.  
-  
+
+File Info:  
+GraphicsLabFramework.zip (size: 730KB)  
+
 Useful for:  
 - Writing lab programs in a first course for computer graphics  
 - Writing raytracers  
