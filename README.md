@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 ```
-Example code: Rotating a line     
+Example code: Animating the rotation of a line     
 ```C
 #include <stdio.h>
 #include <math.h>
