@@ -2,9 +2,9 @@
 A cross platform framework for implementing and  
 studying basic algorithms in computer graphics.  
   
-#### License:  
+License:  
 MIT License  
-
+  
 File Info:  
 GraphicsLabFramework.zip (size: 730KB)  
 
@@ -40,7 +40,8 @@ Writing the framebuffer to PPM file
 Generating Procedural Image (Checker and Gradient)  
 Copying pixels to framebuffer with alpha blending  
   
-How to use the framework:  
+*How to use the framework:* 
+
 Example code: Drawing a line  
 ```C
 #include <stdio.h>
