@@ -2,7 +2,7 @@
 A cross platform framework for implementing and  
 studying basic algorithms in computer graphics.  
   
-License:  
+#### License:  
 MIT License  
 
 File Info:  
