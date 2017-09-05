@@ -159,6 +159,14 @@ int main(int argc, char **argv)
 	swr_sdl_render_screen_texture();
 	swr_sdl_wait_for_events();
 
+	/*
+	Capture screen:
+	Save framebuffer to a datetime stamped PPM image file
+	*/
+	write_ppm_raw(NULL, ctx->screen_texture_pixels,
+		ctx->screen_texture_pixels_wide,
+		ctx->screen_texture_pixels_high);
+
 
 	swr_sdl_destroy_context();
 	return 0;
