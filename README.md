@@ -1,20 +1,18 @@
 # GraphicsLabFramework
-A cross platform framework for implementing and 
+A cross platform framework for implementing and  
 studying basic algorithms in computer graphics.  
   
-Uses:  
-- for writing lab programs in a first course for computer graphics  
-- for writing raytracers.  
-- for writing programs for curves  
-- for writing software rasterizers   
+Useful for:  
+- Writing lab programs in a first course for computer graphics  
+- Writing raytracers  
+- Writing programs for curves  
+- Writing software rasterizers   
 - and so on.  
   
 Building:  
-You need to make a project using this files and resolve dependencies  
-with SDL2 Library (available at https://www.libsdl.org)  
-in order to run this.  
-
-Example Usage:
+You need to make a project using the files in the repository  
+and resolve dependencies with SDL2 Library (available at https://www.libsdl.org)  
+in order to run the program.  
   
 Core:  
 The core of this program is a function which calls  
@@ -22,18 +20,43 @@ a display callback (which may modify a pixel array)
 and renders the pixels to a screen aligned quad.  
   
 Facilities:  
-Access to Frame buffer  
-Display Callback  
-Input Callback  
-Line  
-Rectangle  
-PPM Image  
-Procedural Image (Checker and Gradient)  
+Access to Display Context and Frame buffer  
+Display and Input Callback  
+Drawing Lines and Rectangles  
+Reading and Writing PPM files   
+Writing framebuffer to PPM file    
+Generating Procedural Image (Checker and Gradient)  
 Copying pixels to framebuffer with alpha blending  
-
-
+  
 How to use the framework:  
-Example code   
+Example code: Drawing a line  
+```C
+#include <stdio.h>
+#include <math.h>
+#include "swr_sdl_window.h"
+#include "swr_rasterizer.h"
+
+swr_sdl_context* ctx;
+
+int main(int argc, char **argv)
+{
+	swr_sdl_create_context(640, 480);
+	ctx = swr_sdl_get_context();
+
+	rasterizer_set_swr_sdl_context(ctx);
+	rasterizer_set_cur_color(255, 255, 255, ctx->opaque_alpha_value);
+	rasterizer_set_clear_color(0, 0, 128, ctx->transparent_alpha_value);
+	
+	rasterizer_clear();
+	rasterizer_draw_line_bres(0, 0, 300, 400);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+
+	swr_sdl_destroy_context();
+	return 0;
+}
+```
+Example code: Rotating a line     
 ```C
 #include <stdio.h>
 #include <math.h>
