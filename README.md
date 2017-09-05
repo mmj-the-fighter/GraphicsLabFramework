@@ -10,6 +10,7 @@ Useful for:
 - Writing raytracers  
 - Writing programs for curves  
 - Writing software rasterizers   
+- Writing image processing routines
 - and so on.  
   
 Building:  
@@ -24,7 +25,7 @@ and renders the pixels to a screen aligned quad.
   
 Facilities:  
 Access to Display Context and Frame buffer  
-Display and Input Callback  
+Callback function support for Display and Input  
 Drawing Lines and Rectangles  
 Reading and Writing PPM files   
 Writing framebuffer to PPM file    
@@ -73,14 +74,14 @@ void rotate_line()
 	int xc = 640 / 2;
 	int yc = 480 / 2;
 	double x, y;
-	static double i = 0.0;
-	if (i <= 2 * M_PI) {
-		x = xc + 50.0 * cos(i);
-		y = yc + 50.0 * sin(i);
+	static double theta = 0.0;
+	if (theta <= 2 * M_PI) {
+		x = xc + 50.0 * cos(theta);
+		y = yc + 50.0 * sin(theta);
 		rasterizer_draw_line_bres(xc, yc, (int)x, (int)y);
-		i += M_PI / 180;
+		theta += M_PI / 180;
 	} else {
-		i = 0;
+		theta = 0;
 	}
 }
 
