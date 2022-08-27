@@ -181,3 +181,97 @@ int main(int argc, char **argv)
 	return 0;
 }
 ```
+Example Code: Blurring an Image  
+```C
+#include <stdio.h>
+#include <math.h>
+#include "swr_sdl_window.h"
+#include "swr_rasterizer.h"
+#include "swr_image.h"
+
+swr_sdl_context* ctx;
+unsigned char *realimage;
+int realimagewidth;
+int realimageheight;
+
+void blur_image(unsigned char *img, int width, int height)
+{
+	int n = width * height;
+	int i, j;
+	int r, g, b;
+	int x, y;
+	float v = 1.0 / 9.0;
+	float kernel[3][3] =
+	{
+		{ v, v, v },
+		{ v, v, v },
+		{ v, v, v }
+	};
+	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
+
+	memcpy(resimage, img, width*height * 4);
+	for (x = 1; x < height - 1; ++x) {
+		for (y = 1; y < width - 1; ++y) {
+			float bs = 0.0;
+			float gs = 0.0;
+			float rs = 0.0;
+			for (i = -1; i <= 1; ++i) {
+				for (j = -1; j <= 1; ++j){
+					float weight = (float)kernel[i + 1][j + 1];
+					unsigned char* buffer = img + width * 4 * (y + j) + (x + i) * 4;
+					bs += weight * *buffer;
+					gs += weight * *(buffer + 1);
+					rs += weight * *(buffer + 2);
+				}
+			}
+			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			*outbuffer = bs;
+			*(outbuffer + 1) = gs;
+			*(outbuffer + 2) = rs;
+			*(outbuffer + 3) = 255;
+		}
+	}
+	memcpy(img, resimage, width*height * 4);
+	free(resimage);
+}
+
+
+
+int main(int argc, char **argv)
+{
+	swr_sdl_create_context(640, 480);
+	ctx = swr_sdl_get_context();
+
+	rasterizer_set_swr_sdl_context(ctx);
+	rasterizer_set_cur_color(255, 255, 255, ctx->opaque_alpha_value);
+	rasterizer_set_clear_color(0, 0, 128, ctx->transparent_alpha_value);
+
+	realimage = read_ppm_raw("Lenaclor.ppm", LE, &realimagewidth, &realimageheight);
+
+
+	rasterizer_clear();
+
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+
+	blur_image(realimage, realimagewidth, realimageheight);
+
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+
+	/*
+	Capture screen:
+	Save framebuffer to a datetime stamped PPM image file
+	*/
+	/*	
+	write_ppm_raw(NULL, ctx->screen_texture_pixels,
+		ctx->screen_texture_pixels_wide,
+		ctx->screen_texture_pixels_high);
+	*/
+
+	swr_sdl_destroy_context();
+	return 0;
+}
+```
