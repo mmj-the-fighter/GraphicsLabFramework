@@ -275,3 +275,107 @@ int main(int argc, char **argv)
 	return 0;
 }
 ```
+Example Code: Thresholding an Image  
+```C
+#include <stdio.h>
+#include <math.h>
+#include "swr_sdl_window.h"
+#include "swr_rasterizer.h"
+#include "swr_image.h"
+
+swr_sdl_context* ctx;
+unsigned char *realimage;
+int realimagewidth;
+int realimageheight;
+
+void threshold_image(unsigned char *img, int width, int height)
+{
+	unsigned char* buf = img;
+	int n = width * height;
+	int i;
+	int r, g, b;
+	float sum=0;
+	long count=0;
+	float avg_intensity;
+
+	//find threshold
+	for (i = 0; i < n; ++i)
+	{
+		b = *buf;
+		g = *(buf + 1);
+		r = *(buf + 2);
+		float intensity = (float)((b + g + r)) / 3.0f;
+		sum += intensity;
+		++count;
+		buf += 4;
+	}
+	avg_intensity = sum / (float)count;
+
+	//make the image into a binary image based on the threshold
+	buf = img;
+	for (i = 0; i < n; ++i)
+	{
+		b = *buf;
+		g = *(buf + 1);
+		r = *(buf + 2);
+		float intensity = (float)((b + g + r)) / 3.0f;
+
+		if (intensity < avg_intensity)
+		{
+			*buf++ = 0;
+			*buf++ = 0;
+			*buf++ = 0;
+			*buf++ = 255;
+		}
+		else
+		{
+			*buf++ = 255;
+			*buf++ = 255;
+			*buf++ = 255;
+			*buf++ = 255;
+		}
+	}
+}
+
+
+
+int main(int argc, char **argv)
+{
+	realimage = read_ppm_raw("Lenaclor.ppm", LE, &realimagewidth, &realimageheight);
+
+	swr_sdl_create_context(realimagewidth, realimageheight);
+	ctx = swr_sdl_get_context();
+
+	rasterizer_set_swr_sdl_context(ctx);
+	rasterizer_set_cur_color(255, 255, 255, ctx->opaque_alpha_value);
+	rasterizer_set_clear_color(0, 0, 128, ctx->transparent_alpha_value);
+
+	
+
+
+	rasterizer_clear();
+
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+
+	threshold_image(realimage, realimagewidth, realimageheight);
+
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+
+	/*
+	Capture screen:
+	Save framebuffer to a datetime stamped PPM image file
+	*/
+	/*	
+	write_ppm_raw(NULL, ctx->screen_texture_pixels,
+		ctx->screen_texture_pixels_wide,
+		ctx->screen_texture_pixels_high);
+		*/
+
+	swr_sdl_destroy_context();
+	return 0;
+}
+```
