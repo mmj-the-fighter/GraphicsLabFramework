@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 		ctx->screen_texture_pixels_wide,
 		ctx->screen_texture_pixels_high);
 
-
+	destroy_image(realimage);
 	swr_sdl_destroy_context();
 	return 0;
 }
@@ -194,6 +194,7 @@ unsigned char *realimage;
 int realimagewidth;
 int realimageheight;
 
+/*blur using the nearest neighbourhood average algorithm*/
 void blur_image(unsigned char *img, int width, int height)
 {
 	int n = width * height;
@@ -208,8 +209,8 @@ void blur_image(unsigned char *img, int width, int height)
 		{ v, v, v }
 	};
 	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
-
 	memcpy(resimage, img, width*height * 4);
+	
 	for (x = 1; x < height - 1; ++x) {
 		for (y = 1; y < width - 1; ++y) {
 			float bs = 0.0;
@@ -270,7 +271,7 @@ int main(int argc, char **argv)
 		ctx->screen_texture_pixels_wide,
 		ctx->screen_texture_pixels_high);
 	*/
-
+	destroy_image(realimage);
 	swr_sdl_destroy_context();
 	return 0;
 }
@@ -375,6 +376,7 @@ int main(int argc, char **argv)
 		ctx->screen_texture_pixels_high);
 		*/
 
+	destroy_image(realimage);
 	swr_sdl_destroy_context();
 	return 0;
 }
