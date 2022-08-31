@@ -211,8 +211,8 @@ void blur_image(unsigned char *img, int width, int height)
 	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
 	memcpy(resimage, img, width*height * 4);
 	
-	for (x = 1; x < height - 1; ++x) {
-		for (y = 1; y < width - 1; ++y) {
+	for (x = 1; x < width - 1; ++x) {
+		for (y = 1; y < height - 1; ++y) {
 			float bs = 0.0;
 			float gs = 0.0;
 			float rs = 0.0;
