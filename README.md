@@ -381,3 +381,108 @@ int main(int argc, char **argv)
 	return 0;
 }
 ```
+Example Code: Detecting edges of an image using Sobel filter  
+```C
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include "swr_sdl_window.h"
+#include "swr_rasterizer.h"
+#include "swr_image.h"
+
+swr_sdl_context* ctx;
+unsigned char *realimage;
+int realimagewidth;
+int realimageheight;
+
+
+void sobel_edge_detect(unsigned char *img, int width, int height)
+{
+	int n = width * height;
+	int i, j;
+	int r, g, b;
+	int x, y;
+
+	float sobel_x[3][3] =
+	{
+		{ -1, 0, 1 },
+		{ -2, 0, 2 },
+		{ -1, 0, 1 }
+	};
+
+	float sobel_y[3][3] =
+	{
+		{ -1, -2, -1 },
+		{ 0, 0, 0 },
+		{ 1, 2, 1 }
+	};
+
+
+	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
+	memcpy(resimage, img, width*height * 4);
+
+	for (x = 1; x < width - 1; ++x) {
+		for (y = 1; y < height - 1; ++y) {
+			
+			float sx = 0.0f;
+			float sy = 0.0f;
+			for (i = -1; i <= 1; ++i) {
+				for (j = -1; j <= 1; ++j){
+					unsigned char* buffer = img + width * 4 * (y + j) + (x + i) * 4;
+					b = *buffer;
+					g = *(buffer + 1);
+					r = *(buffer + 2);
+					float luminance = 0.3f * r + 0.59f * g + 0.11f * b;
+					sx += sobel_x[i + 1][j + 1] * luminance;
+				}
+			}
+			for (i = -1; i <= 1; ++i) {
+				for (j = -1; j <= 1; ++j){
+					unsigned char* buffer = img + width * 4 * (y + j) + (x + i) * 4;
+					b = *buffer;
+					g = *(buffer + 1);
+					r = *(buffer + 2);
+					float luminance = 0.3f * r + 0.59f * g + 0.11f * b;
+					sy += sobel_y[i + 1][j + 1] * luminance;
+				}
+			}
+			int s = (int) (sqrt(sx*sx+sy*sy));
+			if (s < 0) {
+				s = 0;
+			}
+			else if (s > 255) {
+				s = 255;
+			}
+			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			*outbuffer = s;
+			*(outbuffer + 1) = s;
+			*(outbuffer + 2) = s;
+			*(outbuffer + 3) = 255;
+		}
+	}
+	memcpy(img, resimage, width*height * 4);
+	free(resimage);
+}
+
+int main(int argc, char **argv)
+{
+	realimage = read_ppm_raw("Lenaclor.ppm", LE, &realimagewidth, &realimageheight);
+	
+	swr_sdl_create_context(realimagewidth, realimageheight);
+	ctx = swr_sdl_get_context();
+	rasterizer_set_swr_sdl_context(ctx);
+
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+	
+	sobel_edge_detect(realimage, realimagewidth, realimageheight);
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+	
+	destroy_image(realimage);
+	swr_sdl_destroy_context();
+	return 0;
+}
+```
