@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include "swr_sdl_context.h"
+#include "swr_rfont.h"
 /*
 Rasterizer 2D coordinate system:
 Origin: at top-left coorner of the screen
@@ -42,7 +43,40 @@ void rasterizer_draw_rect(int left, int top, int bottom, int right);
 void rasterizer_fill_rect(int x0, int y0, int x1, int y1);
 
 /* copy pixels to screen */
-void rasterizer_copy_pixels(int dst_x_start, int dst_y_start, int src_width, int src_height, unsigned char* src_pixels);
+void rasterizer_copy_pixels(int dst_x_start, 
+	int dst_y_start, 
+	int src_width, 
+	int src_height, 
+	unsigned char* src_pixels);
+
+/* copy pixels to screen from a part of the src image*/
+void rasterizer_copy_pixels_subimage(
+	int dst_x_start,
+	int dst_y_start,
+	int src_x_start,
+	int src_y_start,
+	int src_width,
+	int src_height,
+	int src_total_width,
+	int src_total_height,
+	unsigned char* src_pixels);
+
+
+/* copy pixels to screen from part of an image with chroma keying */
+void rasterizer_copy_pixels_subimage_chromakey(
+	int dst_x_start,
+	int dst_y_start,
+	int src_x_start,
+	int src_y_start,
+	int src_width,
+	int src_height,
+	int src_total_width,
+	int src_total_height,
+	swr_color chroma_key,
+	unsigned char* src_pixels);
+
+/* ouput text */
+void rasterizer_draw_text(swr_rfont *f, int x, int y, char* text);
 
 /* clear screen */
 void rasterizer_clear();
