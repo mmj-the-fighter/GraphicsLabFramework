@@ -15,8 +15,7 @@ void write_ppm_raw(const char* filename, unsigned char* pixels, int width, int h
 	int i, num_of_pixels;
 	time_t tm;
 	
-	if (filename != NULL)
-	{
+	if (filename != NULL) {
 		strcpy(fn, filename);
 	}
 	else
@@ -27,8 +26,9 @@ void write_ppm_raw(const char* filename, unsigned char* pixels, int width, int h
 	}
 	fp = fopen(fn, "wb");
 
-	if (fp == NULL)
+	if (fp == NULL) {
 		return;
+	}
 
 	/* Write ppm header */
 	fprintf(fp, "P6\n%d %d\n255\n",
@@ -58,8 +58,7 @@ void write_ppm_ascii(const char* filename, unsigned char* pixels, int width, int
 	int i, num_of_pixels;
 	time_t tm;
 
-	if (filename != NULL)
-	{
+	if (filename != NULL) {
 		strcpy(fn, filename);
 	}
 	else
@@ -69,8 +68,9 @@ void write_ppm_ascii(const char* filename, unsigned char* pixels, int width, int
 		strftime(fn, sizeof(fn), "SCRN_%Y_%m_%d_%H_%M_%S.ppm", localtime(&tm));
 	}
 	fp = fopen(fn, "w");
-	if (fp == NULL)
+	if (fp == NULL) {
 		return;
+	}
 
 	/* Write ppm header */
 	fprintf(fp, "P3\n%d %d\n255\n",
@@ -105,7 +105,7 @@ unsigned char * read_ppm_raw(const char *filename, enum ByteOrder byteOrder, int
 
 	fp = fopen(filename, "rb");
 	if (fp == NULL) {
-		printf("Cannot open file");
+		printf("Cannot open file %s", filename);
 		return NULL;
 	}
 
@@ -122,8 +122,7 @@ unsigned char * read_ppm_raw(const char *filename, enum ByteOrder byteOrder, int
 	}
 
 	/* check for P6 */
-	if (buffer[0] != 'P' || buffer[1] != '6' || !isspace(buffer[2]))
-	{
+	if (buffer[0] != 'P' || buffer[1] != '6' || !isspace(buffer[2])) {
 		printf("\n%s : P6(raw ppm signature) not found", filename);
 		fclose(fp);
 		return NULL;
@@ -131,8 +130,7 @@ unsigned char * read_ppm_raw(const char *filename, enum ByteOrder byteOrder, int
 
 	/* check for comment */
 	c = fgetc(fp);
-	if (c == '#')
-	{
+	if (c == '#') {
 		while ((c = fgetc(fp)) != '\n') {
 			if (c == EOF) {
 				printf("\n%s : Unexpected end of file", filename);
@@ -160,8 +158,7 @@ unsigned char * read_ppm_raw(const char *filename, enum ByteOrder byteOrder, int
 	fscanf(fp, "%d", &color_depth);
 
 	c = fgetc(fp);
-	if (c != '\n')
-	{
+	if (c != '\n') {
 		return NULL;
 	}
 
@@ -197,7 +194,7 @@ unsigned char * read_ppm_ascii(const char *filename, int *textureWidth, int *tex
 
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
-		printf("Cannot open file");
+		printf("Cannot open file %s", filename);
 		return NULL;
 	}
 
@@ -214,8 +211,7 @@ unsigned char * read_ppm_ascii(const char *filename, int *textureWidth, int *tex
 	}
 
 	/* check for P3 */
-	if (buffer[0] != 'P' || buffer[1] != '3' || !isspace(buffer[2]))
-	{
+	if (buffer[0] != 'P' || buffer[1] != '3' || !isspace(buffer[2])) {
 		printf("\n%s : P3(ascii ppm signature) not found", filename);
 		fclose(fp);
 		return NULL;
@@ -223,8 +219,7 @@ unsigned char * read_ppm_ascii(const char *filename, int *textureWidth, int *tex
 
 	/* check for comment */
 	c = fgetc(fp);
-	if (c == '#')
-	{
+	if (c == '#') {
 		while ((c = fgetc(fp)) != '\n') {
 			if (c == EOF) {
 				printf("\n%s : Unexpected end of file", filename);
@@ -261,8 +256,9 @@ unsigned char * read_ppm_ascii(const char *filename, int *textureWidth, int *tex
 		*loc++ = g;
 		*loc++ = r;
 		*loc++ = 255;
-		if (rv == EOF)
+		if (rv == EOF) {
 			break;
+		}
 	}
 	*textureWidth = width;
 	*textureHeight = height;
@@ -278,8 +274,7 @@ unsigned char * create_gradient_image(int ar, int ag, int ab, int aa, int br, in
 	unsigned char* loc;
 	unsigned char* pixels = (unsigned char*)malloc(pitch * height);
 
-	if (pixels == NULL)
-	{
+	if (pixels == NULL) {
 		return NULL;
 	}
 
@@ -314,8 +309,7 @@ unsigned char* create_checker_image(int width, int height, int tileWidth, int ti
 	unsigned char* pixels = (unsigned char*)malloc(image_size);
 	int even_row;
 	int even_col;
-	if (pixels == NULL)
-	{
+	if (pixels == NULL) {
 		return NULL;
 	}
 	for (x = 0; x < width; ++x)
@@ -325,15 +319,13 @@ unsigned char* create_checker_image(int width, int height, int tileWidth, int ti
 			even_col = ((x / tileWidth) % 2 == 0) ? 1 : 0;
 			even_row = ((y / tileHeight) % 2 == 0) ? 1 : 0;
 			loc = pixels + (pitch * y) + (x * 4);
-			if ((even_row && even_col) || (!even_row && !even_col))
-			{
+			if ((even_row && even_col) || (!even_row && !even_col)) {
 				*loc++ = ab;
 				*loc++ = ag;
 				*loc++ = ar;
 				*loc = aa;
 			}
-			else
-			{
+			else {
 				*loc++ = bb;
 				*loc++ = bg;
 				*loc++ = br;
@@ -347,8 +339,7 @@ unsigned char* create_checker_image(int width, int height, int tileWidth, int ti
 
 void destroy_image(unsigned char *pimg)
 {
-	if (pimg != NULL)
-	{
+	if (pimg != NULL) {
 		free(pimg);
 	}
 }
