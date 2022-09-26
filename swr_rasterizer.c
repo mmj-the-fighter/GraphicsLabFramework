@@ -349,7 +349,7 @@ void rasterizer_copy_pixels_subimage_chromakey(
 	int src_height,
 	int src_total_width,
 	int src_total_height,
-	swr_color chroma_key,
+	swr_color* chroma_key,
 	unsigned char* src_pixels)
 {
 	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
@@ -409,9 +409,9 @@ void rasterizer_copy_pixels_subimage_chromakey(
 			dst_y = dst_y_start + y;
 			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
 			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
-			if (chroma_key.b == *src_loc &&
-				chroma_key.g == *(src_loc + 1) &&
-				chroma_key.r == *(src_loc + 2)) 
+			if (chroma_key->b == *src_loc &&
+				chroma_key->g == *(src_loc + 1) &&
+				chroma_key->r == *(src_loc + 2)) 
 			{
 				dst_loc += 4;
 			}
@@ -420,6 +420,93 @@ void rasterizer_copy_pixels_subimage_chromakey(
 				*dst_loc++ = *src_loc++;
 				*dst_loc++ = *src_loc++;
 				*dst_loc = *src_loc;
+			}
+		}
+	}
+}
+
+void rasterizer_copy_pixels_color_replace_subimage_chromakey(
+	int dst_x_start,
+	int dst_y_start,
+	int src_x_start,
+	int src_y_start,
+	int src_width,
+	int src_height,
+	int src_total_width,
+	int src_total_height,
+	swr_color *chroma_key,
+	swr_color *newcolor,
+	unsigned char* src_pixels)
+{
+	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
+	unsigned char *dst_loc, *src_loc;
+	int src_pitch = src_total_width * pcontext->screen_texture_channels;
+	int dst_total_width = pcontext->screen_texture_pixels_wide;
+	int dst_total_height = pcontext->screen_texture_pixels_high;
+	int dst_pitch = pcontext->screen_texture_pitch;
+	int channels = pcontext->screen_texture_channels;
+	int src_x, src_y, dst_x, dst_y;
+	int offset_x;
+	int offset_y;
+	int x, y;
+
+
+	/* sanity check dst_start and src_start coordinates */
+	if (
+		(dst_x_start < 0 || dst_x_start >= dst_total_width) ||
+		(dst_y_start < 0 || dst_y_start >= dst_total_height) ||
+		(src_x_start < 0 || src_x_start >= src_total_width) ||
+		(src_y_start < 0 || src_y_start >= src_total_height)
+		)
+	{
+		return;
+	}
+
+	/* clip at source */
+	offset_x = (src_x_start + src_width) - src_total_width;
+	offset_y = (src_y_start + src_height) - src_total_height;
+	if (offset_x > 0) {
+		src_width -= offset_x;
+	}
+
+	if (offset_y > 0) {
+		src_height -= offset_y;
+	}
+
+	/* clip at destination */
+	offset_x = (dst_x_start + src_width) - dst_total_width;
+	offset_y = (dst_y_start + src_height) - dst_total_height;
+	if (offset_x > 0) {
+		src_width -= offset_x;
+	}
+
+	if (offset_y > 0) {
+		src_height -= offset_y;
+	}
+
+
+	/* iterate through source rectangle */
+	/* copy to destination */
+	for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
+	{
+		for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
+		{
+			dst_x = dst_x_start + x;
+			dst_y = dst_y_start + y;
+			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
+			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
+			if (chroma_key->b == *src_loc &&
+				chroma_key->g == *(src_loc + 1) &&
+				chroma_key->r == *(src_loc + 2))
+			{
+				dst_loc += 4;
+			}
+			else {
+				*dst_loc++ = newcolor->b; 
+				*dst_loc++ = newcolor->g;
+				*dst_loc++ = newcolor->b;
+				*dst_loc = newcolor->a;
+				src_loc += 4;
 			}
 		}
 	}
@@ -444,12 +531,37 @@ void rasterizer_draw_text(swr_rfont *f, int x, int y, char* text)
 		rasterizer_copy_pixels_subimage_chromakey
 			(x, y, col*f->font_cell_width, row*f->font_cell_height, 
 			f->font_cell_width, f->font_cell_height, f->font_image_width, 
-			f->font_image_height, chroma_key, f->font_image_pixels);
+			f->font_image_height, &chroma_key, f->font_image_pixels);
 		x += f->font_width[c];
 		++i;
 	}
 }
 
+
+
+void rasterizer_draw_text_with_color(swr_rfont *f, swr_color *color, int x, int y, char* text)
+{
+	unsigned char c;
+	int i;
+	int maxCols = maxCols = f->font_image_width / f->font_cell_width;
+	unsigned char baseChar = f->font_base_char;
+	unsigned char charDiff;
+	int row, col;
+	swr_color chroma_key = { 255, 0, 255, 255 };
+	i = 0;
+	while ((c = text[i]) != '\0')
+	{
+		charDiff = c - baseChar;
+		row = charDiff / maxCols;
+		col = charDiff - (row*maxCols);
+		rasterizer_copy_pixels_color_replace_subimage_chromakey
+			(x, y, col*f->font_cell_width, row*f->font_cell_height,
+			f->font_cell_width, f->font_cell_height, f->font_image_width,
+			f->font_image_height, &chroma_key, color, f->font_image_pixels);
+		x += f->font_width[c];
+		++i;
+	}
+}
 void rasterizer_clear()
 {
 	unsigned char* loc = pcontext->screen_texture_pixels;

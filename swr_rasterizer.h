@@ -72,11 +72,29 @@ void rasterizer_copy_pixels_subimage_chromakey(
 	int src_height,
 	int src_total_width,
 	int src_total_height,
-	swr_color chroma_key,
+	swr_color *chroma_key,
 	unsigned char* src_pixels);
+
+/* copy pixels with color replace to screen from part of an image with chroma keying */
+void rasterizer_copy_pixels_color_replace_subimage_chromakey(
+	int dst_x_start,
+	int dst_y_start,
+	int src_x_start,
+	int src_y_start,
+	int src_width,
+	int src_height,
+	int src_total_width,
+	int src_total_height,
+	swr_color *chroma_key,
+	swr_color *newcolor,
+	unsigned char* src_pixels);
+
 
 /* ouput text */
 void rasterizer_draw_text(swr_rfont *f, int x, int y, char* text);
+
+/* output text with color */
+void rasterizer_draw_text_with_color(swr_rfont *f, swr_color *color, int x, int y, char* text);
 
 /* clear screen */
 void rasterizer_clear();

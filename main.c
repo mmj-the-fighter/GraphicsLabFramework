@@ -13,6 +13,7 @@ unsigned char *gradientimage;
 int realimagewidth;
 int realimageheight;
 swr_rfont* font;
+swr_color textcolor = { 0, 0, 255, 255 };
 
 void rotating_line()
 {
@@ -87,7 +88,8 @@ void moving_lena(swr_sdl_context *ctx)
 		x = 0;
 	}
 	sprintf(buf, "Lena pos %d", x);
-	rasterizer_draw_text(font, 100, 80, buf);
+//	rasterizer_draw_text(font, 100, 80, buf);
+	rasterizer_draw_text_with_color(font, &textcolor, 100, 80, buf);
 }
 
 void unit_tests(swr_sdl_context *ctx)
