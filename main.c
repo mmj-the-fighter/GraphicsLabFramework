@@ -137,6 +137,67 @@ int input(SDL_Event* e)
 	return 0;
 }
 
+//Thanks to https://www.geeksforgeeks.org/histogram-equalisation-in-c-image-processing/
+void histogram_equalize(unsigned char *img, int width, int height) 
+{
+	int histogramRed[256];
+	int histogramGreen[256];
+	int histogramBlue[256];
+	int newRed[256];
+	int newGreen[256];
+	int newBlue[256];
+	int i = 0;
+	int x, y;
+	int r, g, b;
+	float total_num_of_pixels = (float)(width * height);
+	int redSum = 0, blueSum = 0, greenSum = 0;
+
+	//init
+	for (i = 0; i < 256; ++i) {
+		histogramRed[i] = histogramGreen[i] = histogramBlue[i] = 0;
+		newRed[i] = newGreen[i] = newBlue[i] = 0;
+	}
+
+	//calculate histograms
+	for (x = 0; x < width; ++x) {
+		for (y = 0; y < height; ++y) {
+			unsigned char* buffer = img + (width * 4 * y) + (x * 4);
+			b = *buffer;
+			g = *(buffer + 1);
+			r = *(buffer + 2);
+			histogramRed[r]++;
+			histogramGreen[g]++; 
+			histogramBlue[b]++;
+		}
+	}
+
+	//calculate new colors
+	redSum = 0;
+	blueSum = 0;
+	greenSum = 0;
+	for (i = 0; i < 256; i++) {
+		redSum += histogramRed[i];
+		newRed[i] = round((((float)redSum) * 255.0f) / total_num_of_pixels);
+		greenSum += histogramGreen[i];
+		newGreen[i] = round((((float)greenSum) * 255.0f) / total_num_of_pixels);
+		blueSum += histogramBlue[i];
+		newBlue[i] = round((((float)blueSum) * 255.0f) / total_num_of_pixels);
+	}
+
+	//equalize
+	for (x = 0; x < width; ++x) {
+		for (y = 0; y < height; ++y) {
+			unsigned char* buffer = img + (width * 4 * y) + (x * 4);
+			b = *buffer;
+			g = *(buffer + 1);
+			r = *(buffer + 2);
+			*buffer = newBlue[b];
+			*(buffer + 1) = newGreen[g];
+			*(buffer + 2) = newRed[r];
+		}
+	}
+
+}
 
 void sobel_edge_detect(unsigned char *img, int width, int height)
 {
