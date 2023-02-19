@@ -5,9 +5,6 @@ studying basic algorithms in computer graphics.
 License:  
 MIT License  
   
-File Info:  
-GraphicsLabFramework.zip (size: 730KB)  
-
 Useful for:  
 - Writing lab programs in a first course for computer graphics  
   (pixels, lines, polygons, circles,  ellipses, filling, clipping, transforms etc.)  
@@ -194,7 +191,7 @@ unsigned char *realimage;
 int realimagewidth;
 int realimageheight;
 
-/*blur using the nearest neighbourhood average algorithm*/
+/*applying a box filter of size 3x3*/
 void blur_image(unsigned char *img, int width, int height)
 {
 	int n = width * height;
