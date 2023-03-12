@@ -393,6 +393,7 @@ int main(int argc, char **argv)
 	destroy_image(checkerimage);
 	destroy_image(realimage);
 	destroy_font(font);
+	destroy_image(realimage_clone);
 	swr_sdl_destroy_context();
 	return 0;
 }
