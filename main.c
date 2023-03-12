@@ -8,6 +8,7 @@
 
 swr_sdl_context* ctx;
 unsigned char *realimage;
+unsigned char *realimage_clone;
 unsigned char *checkerimage;
 unsigned char *gradientimage;
 int realimagewidth;
@@ -199,6 +200,57 @@ void histogram_equalize(unsigned char *img, int width, int height)
 
 }
 
+/*apply box filter of size NxN */
+void blur_image_boxfilter(unsigned char *img, int kernelSize, int width, int height)
+{
+	int i, j;
+	int x, y;
+	int nk = kernelSize*kernelSize;
+	int halfKernelSize = kernelSize / 2;
+	float oneOverNk = 1.0f / (float)nk;
+	float* kernel = (float*)malloc(sizeof(float)*nk);
+	for (i = 0; i < nk; i++){
+		kernel[i] = oneOverNk;
+	}
+	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
+
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
+			float bs = 0.0;
+			float gs = 0.0;
+			float rs = 0.0;
+			//if (x <= halfKernelSize || y <= halfKernelSize || x + halfKernelSize >= width || y + halfKernelSize >= height)
+			//continue;
+			for (i = -halfKernelSize; i <= halfKernelSize; ++i) {
+				for (j = -halfKernelSize; j <= halfKernelSize; ++j) {
+					unsigned char* buffer = NULL;
+					float weight = kernel[(i + halfKernelSize)*kernelSize + (j + halfKernelSize)];
+					if (x <= halfKernelSize || y <= halfKernelSize || x + halfKernelSize >= width || y + halfKernelSize >= height){
+						bs += 0;
+						gs += 0;
+						rs += 0;
+					}
+					else {
+						buffer = img + width * 4 * (y + j) + (x + i) * 4;
+						bs += weight * *buffer;
+						gs += weight * *(buffer + 1);
+						rs += weight * *(buffer + 2);
+					}
+				}
+			}
+			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			*outbuffer = bs;
+			*(outbuffer + 1) = gs;
+			*(outbuffer + 2) = rs;
+			*(outbuffer + 3) = 255;
+		}
+	}
+	memcpy(img, resimage, width*height * 4);
+	free(resimage);
+	free(kernel);
+}
+
+
 void sobel_edge_detect(unsigned char *img, int width, int height)
 {
 	int n = width * height;
@@ -282,6 +334,7 @@ int main(int argc, char **argv)
 	
 
 	realimage = read_ppm_raw("Lenaclor.ppm",LE, &realimagewidth, &realimageheight);
+	realimage_clone = clone_image(realimage, realimagewidth, realimageheight, 4);
 	
 	swr_sdl_create_context(800, 600);
 	swr_sdl_set_input_handler(input);
@@ -309,7 +362,7 @@ int main(int argc, char **argv)
 
 	rasterizer_clear();
 	
-	
+	//Sobel filter
 	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
 	rasterizer_draw_text(font, 100, 20, "Base Image");
 	swr_sdl_render_screen_texture();
@@ -320,6 +373,21 @@ int main(int argc, char **argv)
 	rasterizer_draw_text(font, 100, 20, "After applying Sobel Filter");
 	swr_sdl_render_screen_texture();
 	swr_sdl_wait_for_events();
+	
+	//box filter 
+	rasterizer_clear();
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage_clone);
+	rasterizer_draw_text(font, 100, 20, "Before applying box Filter");
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+
+	rasterizer_clear();
+	blur_image_boxfilter(realimage_clone, 15, realimagewidth, realimageheight);
+	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage_clone);
+	rasterizer_draw_text(font, 100, 20, "After applying box Filter of kernelsize 15");
+	swr_sdl_render_screen_texture();
+	swr_sdl_wait_for_events();
+	
 	
 	destroy_image(gradientimage);
 	destroy_image(checkerimage);
