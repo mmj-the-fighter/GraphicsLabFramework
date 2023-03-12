@@ -154,9 +154,10 @@ void rasterizer_fill_rect(int x0, int y0, int x1, int y1)
 	int channels = pcontext->screen_texture_channels;
 	int x, y;
 
-	for (x = x0; x <= x1; ++x)
+	
+	for (y = y0; y <= y1; ++y)
 	{
-		for (y = y0; y <= y1; ++y)
+		for (x = x0; x <= x1; ++x)
 		{
 			loc = pixels + pitch * y + x * channels;
 			*loc++ = pcontext->cur_color.b;
@@ -218,9 +219,10 @@ void rasterizer_copy_pixels(
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (x = 0; x < src_width; ++x)
+	
+	for (y = 0; y < src_height; ++y)
 	{
-		for (y = 0; y < src_height; ++y)
+		for (x = 0; x < src_width; ++x)
 		{
 			src_loc = src_pixels + src_pitch * y + x * channels;
 				dst_loc = dst_pixels + 
@@ -310,9 +312,9 @@ void rasterizer_copy_pixels_subimage(
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
+	for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
 	{
-		for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
+		for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
 		{
 			dst_x = dst_x_start + x;
 			dst_y = dst_y_start + y;
@@ -401,9 +403,9 @@ void rasterizer_copy_pixels_subimage_chromakey(
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (src_x = src_x_start, x = 0; src_x < (src_x_start+src_width); ++src_x, ++x)
+	for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
 	{
-		for (src_y = src_y_start,y=0; src_y < (src_y_start + src_height); ++src_y,++y)
+		for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
 		{
 			dst_x = dst_x_start + x;
 			dst_y = dst_y_start + y;
@@ -487,9 +489,9 @@ void rasterizer_copy_pixels_color_replace_subimage_chromakey(
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
+	for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
 	{
-		for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
+		for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
 		{
 			dst_x = dst_x_start + x;
 			dst_y = dst_y_start + y;
