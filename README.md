@@ -1,6 +1,7 @@
 # GraphicsLabFramework
 A cross platform framework for implementing and  
-studying basic algorithms in computer graphics.  
+studying basic algorithms in computer graphics.
+It uses SDL2 library.
   
 License:  
 MIT License  
