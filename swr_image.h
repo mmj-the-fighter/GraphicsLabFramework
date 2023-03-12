@@ -24,6 +24,9 @@ extern "C" {
 
 	/* make a checker board pattern */
 	unsigned char* create_checker_image(int width, int height, int tileWidth, int tileHeight, int ar, int ag, int ab, int aa, int br, int bg, int bb, int ba);
+	
+	/*clone an image*/
+	unsigned char* clone_image(unsigned char* image, int width, int height, int number_of_channels);
 
 	/* destroy image pointer safely */
 	void destroy_image(unsigned char *pimg);
