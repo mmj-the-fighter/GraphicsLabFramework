@@ -208,8 +208,8 @@ void blur_image(unsigned char *img, int width, int height)
 	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
 	memcpy(resimage, img, width*height * 4);
 	
-	for (x = 1; x < width - 1; ++x) {
-		for (y = 1; y < height - 1; ++y) {
+	for (y = 1; y < height - 1; ++y) {
+		for (x = 1; x < width - 1; ++x) {
 			float bs = 0.0;
 			float gs = 0.0;
 			float rs = 0.0;
@@ -418,8 +418,8 @@ void sobel_edge_detect(unsigned char *img, int width, int height)
 	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
 	memcpy(resimage, img, width*height * 4);
 
-	for (x = 1; x < width - 1; ++x) {
-		for (y = 1; y < height - 1; ++y) {
+	for (y = 1; y < height - 1; ++y) {
+		for (x = 1; x < width - 1; ++x) {
 			
 			float sx = 0.0f;
 			float sy = 0.0f;
