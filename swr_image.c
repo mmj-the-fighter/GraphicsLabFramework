@@ -312,9 +312,10 @@ unsigned char* create_checker_image(int width, int height, int tileWidth, int ti
 	if (pixels == NULL) {
 		return NULL;
 	}
-	for (x = 0; x < width; ++x)
+
+	for (y = 0; y < height; ++y)
 	{
-		for (y = 0; y < height; ++y)
+		for (x = 0; x < width; ++x)
 		{
 			even_col = ((x / tileWidth) % 2 == 0) ? 1 : 0;
 			even_row = ((y / tileHeight) % 2 == 0) ? 1 : 0;
