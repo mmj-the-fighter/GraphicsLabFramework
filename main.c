@@ -159,8 +159,8 @@ void histogram_equalize(unsigned char *img, int width, int height)
 	}
 
 	//calculate histograms
-	for (x = 0; x < width; ++x) {
-		for (y = 0; y < height; ++y) {
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
 			unsigned char* buffer = img + (width * 4 * y) + (x * 4);
 			b = *buffer;
 			g = *(buffer + 1);
@@ -185,8 +185,8 @@ void histogram_equalize(unsigned char *img, int width, int height)
 	}
 
 	//equalize
-	for (x = 0; x < width; ++x) {
-		for (y = 0; y < height; ++y) {
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
 			unsigned char* buffer = img + (width * 4 * y) + (x * 4);
 			b = *buffer;
 			g = *(buffer + 1);
@@ -224,11 +224,12 @@ void sobel_edge_detect(unsigned char *img, int width, int height)
 	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
 	memcpy(resimage, img, width*height * 4);
 
-	for (x = 1; x < width - 1; ++x) {
-		for (y = 1; y < height - 1; ++y) {
+	for (y = 1; y < height - 1; ++y) {
+		for (x = 1; x < width - 1; ++x) {
 
 			float sx = 0.0f;
 			float sy = 0.0f;
+			float w = 0.0f;
 			for (i = -1; i <= 1; ++i) {
 				for (j = -1; j <= 1; ++j) {
 					unsigned char* buffer = img + width * 4 * (y + j) + (x + i) * 4;
@@ -236,6 +237,7 @@ void sobel_edge_detect(unsigned char *img, int width, int height)
 					g = *(buffer + 1);
 					r = *(buffer + 2);
 					float luminance = 0.3f * r + 0.59f * g + 0.11f * b;
+					w = sobel_x[i + 1][j + 1];
 					sx += sobel_x[i + 1][j + 1] * luminance;
 				}
 			}
@@ -312,7 +314,7 @@ int main(int argc, char **argv)
 	rasterizer_draw_text(font, 100, 20, "Base Image");
 	swr_sdl_render_screen_texture();
 	swr_sdl_wait_for_events();
-
+	
 	sobel_edge_detect(realimage, realimagewidth, realimageheight);
 	rasterizer_copy_pixels(0, 0, realimagewidth, realimageheight, realimage);
 	rasterizer_draw_text(font, 100, 20, "After applying Sobel Filter");
