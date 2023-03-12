@@ -338,6 +338,14 @@ unsigned char* create_checker_image(int width, int height, int tileWidth, int ti
 }
 #undef NUM_OF_CHANNELS
 
+unsigned char* clone_image(unsigned char* image, int width, int height, int number_of_channels)
+{
+	size_t image_size = width * height * number_of_channels * sizeof(unsigned char);
+	unsigned char* clone = (unsigned char*)malloc(image_size);
+	memcpy(clone, image, image_size);
+	return clone;
+}
+
 void destroy_image(unsigned char *pimg)
 {
 	if (pimg != NULL) {
