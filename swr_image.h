@@ -6,11 +6,14 @@ extern "C" {
 #endif
 
 	enum ByteOrder { LE, BE };
-	
-	/* save image of raw ppm format */
+
+	/* save image in bmp format*/
+	void write_bmp(const char* filename, unsigned char* pixels, int width, int height);
+
+	/* save image in raw ppm format */
 	void write_ppm_raw(const char* filename, unsigned char* pixels, int width, int height);
 
-	/* save image of raw ppm format */
+	/* save image in ascii ppm format */
 	void write_ppm_ascii(const char* filename, unsigned char* pixels, int width, int height);
 	
 	/* load image of raw ppm format */
