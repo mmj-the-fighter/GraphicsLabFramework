@@ -6,6 +6,79 @@
 #include "swr_pixel.h"
 #include "swr_image.h"
 
+
+void write_bmp(const char* filename, unsigned char* pixels, int width, int height)
+{
+	unsigned char *loc;
+	char fn[256];
+	FILE *fp;
+	int i, num_of_pixels;
+	time_t tm;
+	const int bmp_file_size = width * height * 3 + 54;
+	unsigned char* bmp_data;
+/*
+Why height is given negative in bmp_header ?
+https://stackoverflow.com/questions/26144955/after-writing-bmp-file-image-is-flipped-upside-down
+*/
+	const unsigned char bmp_header[54] = {
+		0x42, 0x4D, // BM
+		bmp_file_size & 0xFF, bmp_file_size >> 8 & 0xFF, bmp_file_size >> 16 & 0xFF, bmp_file_size >> 24 & 0xFF, // File size
+		0x00, 0x00, 0x00, 0x00, // Reserved
+		0x36, 0x00, 0x00, 0x00, // Offset to pixel data
+		0x28, 0x00, 0x00, 0x00, // Info header size
+		width & 0xFF, width >> 8 & 0xFF, width >> 16 & 0xFF, width >> 24 & 0xFF, // Image width
+		-height & 0xFF, -height >> 8 & 0xFF, -height >> 16 & 0xFF, -height >> 24 & 0xFF, // Image height, negative since this bitmap is a top-down DIB with the origin at the upper left corner.
+		0x01, 0x00, // Number of color planes
+		0x18, 0x00, // Bits per pixel
+		0x00, 0x00, 0x00, 0x00, // Compression method
+		0x00, 0x00, 0x00, 0x00, // Image size
+		0x13, 0x0B, 0x00, 0x00, // Horizontal resolution (2835 pixels/meter)
+		0x13, 0x0B, 0x00, 0x00, // Vertical resolution (2835 pixels/meter)
+		0x00, 0x00, 0x00, 0x00, // Number of colors in the palette
+		0x00, 0x00, 0x00, 0x00 // Number of important colors
+	};
+
+	if (filename != NULL) {
+		strcpy(fn, filename);
+	}
+	else
+	{
+		/* if filename is not given, Make file name from time stamp*/
+		tm = time(NULL);
+		strftime(fn, sizeof(fn), "IMG_%Y_%m_%d_%H_%M_%S.bmp", localtime(&tm));
+	}
+	fp = fopen(fn, "wb");
+
+	if (fp == NULL) {
+		return;
+	}
+
+
+	/* Dump r,g,b values */
+	bmp_data = (unsigned char*)malloc(width*height * 3);
+	loc = pixels;
+	num_of_pixels = width * height;
+
+	int j = 0;
+	for (i = 0; i < num_of_pixels; ++i)
+	{
+		/*
+		rgb[0] = *loc++;
+		rgb[1] = *loc++;
+		rgb[2] = *loc++;
+		loc++;
+		*/
+		bmp_data[j++] = *loc++;
+		bmp_data[j++] = *loc++;
+		bmp_data[j++] = *loc++;
+		loc++;
+	}
+	fwrite(bmp_header, sizeof(bmp_header), 1, fp);
+	fwrite(bmp_data, width * height * 3, 1, fp);
+	fclose(fp);
+}
+
+
 void write_ppm_raw(const char* filename, unsigned char* pixels, int width, int height)
 {
 	unsigned char rgb[3];
