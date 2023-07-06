@@ -10,6 +10,9 @@ extern "C" {
 	/* save image in bmp format*/
 	void write_bmp(const char* filename, unsigned char* pixels, int width, int height);
 
+	/* save image in bmp format without storing negative height as bmp header*/
+	void write_bmp2(const char* filename, unsigned char* pixels, int width, int height);
+
 	/* save image in raw ppm format */
 	void write_ppm_raw(const char* filename, unsigned char* pixels, int width, int height);
 
