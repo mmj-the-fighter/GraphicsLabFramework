@@ -24,6 +24,7 @@ int swr_sdl_create_context(
 	context.screen_texture_channels = 4;
 	context.transparent_alpha_value = SDL_ALPHA_TRANSPARENT;
 	context.opaque_alpha_value = SDL_ALPHA_OPAQUE;
+	context.lastFrameTime = 0.0f;
 
 	
 	/* init SDL */
@@ -120,7 +121,7 @@ void swr_sdl_wait_for_events()
 void swr_sdl_main_loop(void)
 {
 	SDL_Event event;
-	Uint32 frame_start_time, elapsed_time;
+	Uint32 frame_start_time, elapsed_time = 0, wait_delay = 0;
 
 	while (running)
 	{
@@ -139,6 +140,8 @@ void swr_sdl_main_loop(void)
 			}
 		}
 
+		context.lastFrameTime = (float)(elapsed_time + wait_delay) / 1000.0f;
+
 		/* accept changes to screen pixels from user*/
 		if (context.display_handler != NULL)
 			(*context.display_handler)(&context);
@@ -153,8 +156,14 @@ void swr_sdl_main_loop(void)
 
 		/* sleep till next frame time */
 		elapsed_time = (SDL_GetTicks() - frame_start_time);
-		if (elapsed_time < targetMSPF)
-			SDL_Delay(targetMSPF - elapsed_time);
+		if (elapsed_time < targetMSPF) {
+			wait_delay = targetMSPF - elapsed_time;
+			SDL_Delay(wait_delay);
+		}
+		else{
+			wait_delay = 0;
+		}
+			
 	}
 }
 

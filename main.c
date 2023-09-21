@@ -16,24 +16,27 @@ int realimageheight;
 swr_rfont* font;
 swr_color textcolor = { 0, 0, 255, 255 };
 
-void rotating_line()
+float velx = 100.0f;
+
+void rotating_line(swr_sdl_context *ctx)
 {
 	char buf[256];
 	int xc = 640 / 2;
 	int yc = 480 / 2;
 	double x, y;
-	static double i = 0.0;
-	if (i <= 2 * M_PI) {
-		x = xc + 50.0 * cos(i);
-		y = yc + 50.0 * sin(i);
-		/* rasterizer_draw_line_bres(xc, yc, x, y); */
-		rasterizer_draw_line_dda(xc, yc, (int)x, (int)y);
-		i += M_PI / 180;
+	double omega = 6 * (M_PI / 180);
+	static double theta = 0.0;
+	if (theta <= 2 * M_PI) {
+		x = xc + 50.0 * cos(theta);
+		y = yc + 50.0 * sin(theta);
+		rasterizer_draw_line_bres(xc, yc, x, y);
+		//rasterizer_draw_line_dda(xc, yc, (int)x, (int)y);
+		theta += omega * ctx->lastFrameTime;
 	}
 	else {
-		i = 0;
+		theta = 0;
 	}
-	sprintf(buf, "rotation angle %f", (i*180.0/M_PI));
+	sprintf(buf, "rotation angle %f", (theta*180.0 / M_PI));
 	rasterizer_draw_text(font, 100, 200, buf);
 }
 
@@ -62,19 +65,20 @@ void test_line()
 
 void moving_gradient(swr_sdl_context *ctx)
 {
-	static int x = 0;
+	static float x = 0;
 	rasterizer_copy_pixels(x, 0, 256, 256, gradientimage);
-	if (++x > ctx->screen_texture_pixels_wide) {
+	x += velx * ctx->lastFrameTime;
+	if (x > ctx->screen_texture_pixels_wide) {
 		x = 0;
 	}
 }
 
 void moving_checker(swr_sdl_context *ctx)
 {
-	static int x = 0;
-	//rasterizer_copy_pixels(x, 600 - 256, 256, 256, checkerimage);
-	rasterizer_copy_pixels_subimage(x, 600 - 256, 100, 100, 100, 100, 256, 256, checkerimage);
-	if (++x > ctx->screen_texture_pixels_wide) {
+	static float x = 0;
+	rasterizer_copy_pixels(x, 600 - 256, 256, 256, checkerimage);
+	x += velx * ctx->lastFrameTime;
+	if (x > ctx->screen_texture_pixels_wide) {
 		x = 0;
 	}
 }
@@ -82,10 +86,11 @@ void moving_checker(swr_sdl_context *ctx)
 void moving_lena(swr_sdl_context *ctx)
 {
 	char buf[256];
-	static int x = 0;
+	static float x = 0;
 	rasterizer_copy_pixels(x, 0, realimagewidth, realimageheight, realimage);
 	//rasterizer_copy_pixels_subimage(x, 0, 100, 100, 256, 256, realimagewidth, realimageheight, realimage);
-	if (++x > ctx->screen_texture_pixels_wide) {
+	x += velx * ctx->lastFrameTime;
+	if (x > ctx->screen_texture_pixels_wide) {
 		x = 0;
 	}
 	sprintf(buf, "Lena pos %d", x);
@@ -102,7 +107,7 @@ void unit_tests(swr_sdl_context *ctx)
 	moving_checker(ctx);
 	moving_gradient(ctx);
 	rasterizer_draw_rect(10, 10, 640 - 10, 480 - 10);
-	rotating_line();
+	rotating_line(ctx);
 	rasterizer_draw_text(font, 100, 20, "Unit Tests");
 }
 

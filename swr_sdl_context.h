@@ -25,8 +25,9 @@ typedef struct _swr_sdl_context
 	unsigned char *screen_texture_pixels; /* frame buffer */
 	float *depth_buffer;
 	size_t screen_textue_pixels_size_in_bytes;
-	void (*display_handler) (struct _swr_sdl_context *);
+	void(*display_handler) (struct _swr_sdl_context *);
 	int (*input_handler) (SDL_Event *);
+	float lastFrameTime;
 }swr_sdl_context;
 
 #ifdef __cplusplus
