@@ -76,26 +76,32 @@ Example code: Animating the rotation of a line
 
 swr_sdl_context* ctx;
 
-void rotate_line()
+void rotating_line(swr_sdl_context *ctx)
 {
+	char buf[256];
 	int xc = 640 / 2;
 	int yc = 480 / 2;
 	double x, y;
+	double omega = 6 * (M_PI / 180);
 	static double theta = 0.0;
 	if (theta <= 2 * M_PI) {
 		x = xc + 50.0 * cos(theta);
 		y = yc + 50.0 * sin(theta);
-		rasterizer_draw_line_bres(xc, yc, (int)x, (int)y);
-		theta += M_PI / 180;
-	} else {
+		rasterizer_draw_line_bres(xc, yc, x, y);
+		//rasterizer_draw_line_dda(xc, yc, (int)x, (int)y);
+		theta += omega * ctx->lastFrameTime;
+	}
+	else {
 		theta = 0;
 	}
+	sprintf(buf, "rotation angle %f", (theta*180.0 / M_PI));
+	rasterizer_draw_text(font, 100, 200, buf);
 }
 
 void display(swr_sdl_context *ctx)
 {	
 	rasterizer_clear();
-	rotate_line();
+	rotate_line(ctx);
 }
 
 int main(int argc, char **argv)
