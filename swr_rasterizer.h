@@ -49,6 +49,14 @@ void rasterizer_copy_pixels(int dst_x_start,
 	int src_height, 
 	unsigned char* src_pixels);
 
+/* copy pixels to screen with chroma keying*/
+void rasterizer_copy_pixels_chromakey(int dst_x_start,
+	int dst_y_start,
+	int src_width,
+	int src_height,
+	swr_color *chroma_key,
+	unsigned char* src_pixels);
+
 /* copy pixels to screen from a part of the src image*/
 void rasterizer_copy_pixels_subimage(
 	int dst_x_start,

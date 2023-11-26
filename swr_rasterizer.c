@@ -2,6 +2,7 @@
 #include <string.h>
 #include "swr_rasterizer.h"
 #include "swr_pixel.h"
+#include "swr_utils.h"
 
 static swr_sdl_context* pcontext = NULL;
 static int alpha_blending_flag = 0;
@@ -176,6 +177,7 @@ void rasterizer_draw_rect(int left, int top, int right, int bottom)
 	rasterizer_draw_line_dda(left, bottom, left, top);
 }
 
+//1
 void rasterizer_copy_pixels(
 	int dst_x_start,
 	int dst_y_start,
@@ -183,6 +185,10 @@ void rasterizer_copy_pixels(
 	int src_height,
 	unsigned char* src_pixels)
 {
+	swr_rect r1, r2, ir;
+	int sx, sy, tw, th;
+	int src_x, src_y;
+	int dst_x, dst_y;
 	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
 	unsigned char *dst_loc, *src_loc;
 	int src_pitch = src_width * pcontext->screen_texture_channels;
@@ -191,44 +197,52 @@ void rasterizer_copy_pixels(
 	int dst_pitch = pcontext->screen_texture_pitch;
 	int channels = pcontext->screen_texture_channels;
 	int x, y;
-	int offset_x;
-	int offset_y;
 	double src_alpha;
 	double one_minus_src_alpha;
 	double inv_255 = 1.0 / 255.0;
 	unsigned char src_alpha_uchar;
 
+
 	/* sanity check dst_start coordinates */
 	if (
-		(dst_x_start < 0 || dst_x_start >= dst_width) ||
-		(dst_y_start < 0 || dst_y_start >= dst_height)
+		(dst_x_start + src_width < 0 || dst_x_start >= dst_width) ||
+		(dst_y_start + src_height < 0 || dst_y_start >= dst_height)
 		)
 	{
 		return;
 	}
 
-	/* clip */
-	offset_x = (dst_x_start + src_width) - dst_width;
-	offset_y = (dst_y_start + src_height) - dst_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
-	}
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+	/*compute intersection*/
+	r1.left = dst_x_start;
+	r1.top = dst_y_start;
+	r1.width = src_width;
+	r1.height = src_height;
 
-	/* iterate through source rectangle */
+	r2.left = 0;
+	r2.top = 0;
+	r2.width = dst_width;
+	r2.height = dst_height;
+
+	swr_intersect_rect_rect(&r1, &r2, &ir);
+
+
+	/*clip new */
+	sx = ir.left - r1.left;
+	sy = ir.top - r1.top;
+	tw = ir.width-1;
+	th = ir.height-1;
+
+
+	/*iterate through source rectangle * /
 	/* copy to destination */
-	
-	for (y = 0; y < src_height; ++y)
+	for (src_y = sy, y = 0; src_y < (sy + th); ++src_y, ++y)
 	{
-		for (x = 0; x < src_width; ++x)
+		for (src_x = sx, x = 0; src_x < (sx + tw); ++src_x, ++x)
 		{
-			src_loc = src_pixels + src_pitch * y + x * channels;
-				dst_loc = dst_pixels + 
-					dst_pitch * (dst_y_start + y) + 
-					(dst_x_start + x) * channels;
-				
+			dst_x = ir.left + x;
+			dst_y = ir.top + y;
+			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
+			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
 			if (alpha_blending_flag) {
 				/* blend */
 				/* SourceColorAlpha * SourceColorBGR + (1 - SourceColorAlpha) * DestinationColorBGR */
@@ -251,6 +265,87 @@ void rasterizer_copy_pixels(
 	}
 }
 
+//2
+void rasterizer_copy_pixels_chromakey(
+	int dst_x_start,
+	int dst_y_start,
+	int src_width,
+	int src_height,
+	swr_color *chroma_key,
+	unsigned char* src_pixels)
+{
+	swr_rect r1, r2, ir;
+	int sx, sy, tw, th;
+	int src_x, src_y;
+	int dst_x, dst_y;
+	//~
+	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
+	unsigned char *dst_loc, *src_loc;
+	int src_pitch = src_width * pcontext->screen_texture_channels;
+	int dst_width = pcontext->screen_texture_pixels_wide;
+	int dst_height = pcontext->screen_texture_pixels_high;
+	int dst_pitch = pcontext->screen_texture_pitch;
+	int channels = pcontext->screen_texture_channels;
+	int x, y;
+
+
+	/* sanity check dst_start coordinates */
+	if (
+		(dst_x_start + src_width < 0 || dst_x_start >= dst_width) ||
+		(dst_y_start + src_height < 0 || dst_y_start >= dst_height)
+		)
+	{
+		return;
+	}
+
+	/*compute intersection*/
+	r1.left = dst_x_start;
+	r1.top = dst_y_start;
+	r1.width = src_width;
+	r1.height = src_height;
+
+	r2.left = 0;
+	r2.top = 0;
+	r2.width = dst_width;
+	r2.height = dst_height;
+
+	swr_intersect_rect_rect(&r1, &r2, &ir);
+
+
+	/*clip new */
+	sx = ir.left - r1.left;
+	sy = ir.top - r1.top;
+	tw = ir.width;
+	th = ir.height;
+
+
+	/*iterate through source rectangle * /
+	/* copy to destination */
+	for (src_y = sy, y = 0; src_y < (sy + th); ++src_y, ++y)
+	{
+		for (src_x = sx, x = 0; src_x < (sx + tw); ++src_x, ++x)
+		{
+			dst_x = ir.left + x;
+			dst_y = ir.top + y;
+			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
+			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
+			if (chroma_key->b == *src_loc &&
+				chroma_key->g == *(src_loc + 1) &&
+				chroma_key->r == *(src_loc + 2))
+			{
+				dst_loc += 4;
+			}
+			else {
+				*dst_loc++ = *src_loc++;
+				*dst_loc++ = *src_loc++;
+				*dst_loc++ = *src_loc++;
+				*dst_loc = *src_loc;
+			}
+		}
+	}
+}
+
+//3
 void rasterizer_copy_pixels_subimage(
 	int dst_x_start,
 	int dst_y_start,
@@ -262,16 +357,16 @@ void rasterizer_copy_pixels_subimage(
 	int src_total_height,
 	unsigned char* src_pixels)
 {
+	swr_rect r1, r2, ir;
+	int sx, sy, tw, th;
 	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
 	unsigned char *dst_loc, *src_loc;
 	int src_pitch = src_total_width * pcontext->screen_texture_channels;
-	int dst_total_width = pcontext->screen_texture_pixels_wide;
-	int dst_total_height = pcontext->screen_texture_pixels_high;
+	int dst_width = pcontext->screen_texture_pixels_wide;
+	int dst_height = pcontext->screen_texture_pixels_high;
 	int dst_pitch = pcontext->screen_texture_pitch;
 	int channels = pcontext->screen_texture_channels;
 	int src_x, src_y, dst_x, dst_y;
-	int offset_x;
-	int offset_y;
 	int x, y;
 	double src_alpha;
 	double one_minus_src_alpha;
@@ -279,45 +374,47 @@ void rasterizer_copy_pixels_subimage(
 	unsigned char src_alpha_uchar;
 
 
-	/* sanity check dst_start and src_start coordinates */
+
+	/* sanity check dst_start coordinates */
 	if (
-		(dst_x_start < 0 || dst_x_start >= dst_total_width) ||
-		(dst_y_start < 0 || dst_y_start >= dst_total_height) ||
-		(src_x_start < 0 || src_x_start >= src_total_width) ||
-		(src_y_start < 0 || src_y_start >= src_total_height)
+		(dst_x_start + src_width < 0 || dst_x_start >= dst_width) ||
+		(dst_y_start + src_height < 0 || dst_y_start >= dst_height)
 		)
 	{
 		return;
 	}
+	if (dst_y_start < 0){
+		dst_y_start = dst_y_start + 1 - 2;
+	}
+	/*compute intersection*/
+	r1.left = dst_x_start;
+	r1.top = dst_y_start;
+	r1.width = src_width;
+	r1.height = src_height;
 
-	/* clip at source */
-	offset_x = (src_x_start + src_width) - src_total_width;
-	offset_y = (src_y_start + src_height) - src_total_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
-	}
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+	r2.left = 0;
+	r2.top = 0;
+	r2.width = dst_width;
+	r2.height = dst_height;
 
-	/* clip at destination */
-	offset_x = (dst_x_start + src_width) - dst_total_width;
-	offset_y = (dst_y_start + src_height) - dst_total_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
-	}
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+	swr_intersect_rect_rect(&r1, &r2, &ir);
+
+	/*clip new */
+	sx = ir.left - r1.left;
+	sy = ir.top - r1.top;
+	tw = ir.width;
+	th = ir.height;
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
+	for (src_y = src_y_start + sy, y = 0; src_y < (src_y_start + sy + th); ++src_y, ++y)
 	{
-		for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
+		for (src_x = src_x_start + sx, x = 0; src_x < (src_x_start + sx + tw); ++src_x, ++x)
 		{
-			dst_x = dst_x_start + x;
-			dst_y = dst_y_start + y;
+			//dst_x = dst_x_start + x;
+			//dst_y = dst_y_start + y;
+			dst_x = ir.left + x;
+			dst_y = ir.top + y;
 			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
 			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
 			if (alpha_blending_flag) {
@@ -342,6 +439,7 @@ void rasterizer_copy_pixels_subimage(
 }
 
 
+//4
 void rasterizer_copy_pixels_subimage_chromakey(
 	int dst_x_start,
 	int dst_y_start,
@@ -354,66 +452,68 @@ void rasterizer_copy_pixels_subimage_chromakey(
 	swr_color* chroma_key,
 	unsigned char* src_pixels)
 {
+	swr_rect r1, r2, ir;
+	int sx, sy, tw, th;
+	
 	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
 	unsigned char *dst_loc, *src_loc;
 	int src_pitch = src_total_width * pcontext->screen_texture_channels;
-	int dst_total_width = pcontext->screen_texture_pixels_wide;
-	int dst_total_height = pcontext->screen_texture_pixels_high;
+	int dst_width = pcontext->screen_texture_pixels_wide;
+	int dst_height = pcontext->screen_texture_pixels_high;
 	int dst_pitch = pcontext->screen_texture_pitch;
 	int channels = pcontext->screen_texture_channels;
-	int src_x, src_y,dst_x,dst_y;
-	int offset_x;
-	int offset_y;
+	int src_x, src_y, dst_x, dst_y;
 	int x, y;
 
 
-	/* sanity check dst_start and src_start coordinates */
+	/* sanity check dst_start coordinates */
 	if (
-		(dst_x_start < 0 || dst_x_start >= dst_total_width) ||
-		(dst_y_start < 0 || dst_y_start >= dst_total_height) ||
-		(src_x_start < 0 || src_x_start >= src_total_width) ||
-		(src_y_start < 0 || src_y_start >= src_total_height)
+		(dst_x_start + src_width < 0 || dst_x_start >= dst_width) ||
+		(dst_y_start + src_height < 0 || dst_y_start >= dst_height)
 		)
 	{
 		return;
 	}
-
-	/* clip at source */
-	offset_x = (src_x_start + src_width) - src_total_width;
-	offset_y = (src_y_start + src_height) - src_total_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
+	if (dst_y_start < 0){
+		dst_y_start = dst_y_start + 1 - 2;
 	}
+	/*compute intersection*/
+	r1.left = dst_x_start;
+	r1.top = dst_y_start;
+	r1.width = src_width;
+	r1.height = src_height;
 
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+	r2.left = 0;
+	r2.top = 0;
+	r2.width = dst_width;
+	r2.height = dst_height;
 
-	/* clip at destination */
-	offset_x = (dst_x_start + src_width) - dst_total_width;
-	offset_y = (dst_y_start + src_height) - dst_total_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
-	}
+	swr_intersect_rect_rect(&r1, &r2, &ir);
 
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+
+	/*clip new */
+	sx = ir.left - r1.left;
+	sy = ir.top - r1.top;
+	tw = ir.width;
+	th = ir.height;
+
 
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
+	for (src_y = src_y_start + sy, y = 0; src_y < (src_y_start + sy + th); ++src_y, ++y)
 	{
-		for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
+		for (src_x = src_x_start + sx, x = 0; src_x < (src_x_start + sx + tw); ++src_x, ++x)
 		{
-			dst_x = dst_x_start + x;
-			dst_y = dst_y_start + y;
+			//dst_x = dst_x_start + x;
+			//dst_y = dst_y_start + y;
+			dst_x = ir.left + x;
+			dst_y = ir.top + y;
 			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
 			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
 			if (chroma_key->b == *src_loc &&
 				chroma_key->g == *(src_loc + 1) &&
-				chroma_key->r == *(src_loc + 2)) 
+				chroma_key->r == *(src_loc + 2))
 			{
 				dst_loc += 4;
 			}
@@ -427,6 +527,8 @@ void rasterizer_copy_pixels_subimage_chromakey(
 	}
 }
 
+
+//5
 void rasterizer_copy_pixels_color_replace_subimage_chromakey(
 	int dst_x_start,
 	int dst_y_start,
@@ -440,61 +542,61 @@ void rasterizer_copy_pixels_color_replace_subimage_chromakey(
 	swr_color *newcolor,
 	unsigned char* src_pixels)
 {
+
+	swr_rect r1, r2, ir;
+	int sx, sy, tw, th;
+
 	unsigned char *dst_pixels = pcontext->screen_texture_pixels;
 	unsigned char *dst_loc, *src_loc;
 	int src_pitch = src_total_width * pcontext->screen_texture_channels;
-	int dst_total_width = pcontext->screen_texture_pixels_wide;
-	int dst_total_height = pcontext->screen_texture_pixels_high;
+	int dst_width = pcontext->screen_texture_pixels_wide;
+	int dst_height = pcontext->screen_texture_pixels_high;
 	int dst_pitch = pcontext->screen_texture_pitch;
 	int channels = pcontext->screen_texture_channels;
 	int src_x, src_y, dst_x, dst_y;
-	int offset_x;
-	int offset_y;
 	int x, y;
 
 
-	/* sanity check dst_start and src_start coordinates */
+	/* sanity check dst_start coordinates */
 	if (
-		(dst_x_start < 0 || dst_x_start >= dst_total_width) ||
-		(dst_y_start < 0 || dst_y_start >= dst_total_height) ||
-		(src_x_start < 0 || src_x_start >= src_total_width) ||
-		(src_y_start < 0 || src_y_start >= src_total_height)
+		(dst_x_start + src_width < 0 || dst_x_start >= dst_width) ||
+		(dst_y_start + src_height < 0 || dst_y_start >= dst_height)
 		)
 	{
 		return;
 	}
-
-	/* clip at source */
-	offset_x = (src_x_start + src_width) - src_total_width;
-	offset_y = (src_y_start + src_height) - src_total_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
+	if (dst_y_start < 0){
+		dst_y_start = dst_y_start + 1 - 2;
 	}
+	/*compute intersection*/
+	r1.left = dst_x_start;
+	r1.top = dst_y_start;
+	r1.width = src_width;
+	r1.height = src_height;
 
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+	r2.left = 0;
+	r2.top = 0;
+	r2.width = dst_width;
+	r2.height = dst_height;
 
-	/* clip at destination */
-	offset_x = (dst_x_start + src_width) - dst_total_width;
-	offset_y = (dst_y_start + src_height) - dst_total_height;
-	if (offset_x > 0) {
-		src_width -= offset_x;
-	}
+	swr_intersect_rect_rect(&r1, &r2, &ir);
 
-	if (offset_y > 0) {
-		src_height -= offset_y;
-	}
+
+	/*clip new */
+	sx = ir.left - r1.left;
+	sy = ir.top - r1.top;
+	tw = ir.width;
+	th = ir.height;
 
 
 	/* iterate through source rectangle */
 	/* copy to destination */
-	for (src_y = src_y_start, y = 0; src_y < (src_y_start + src_height); ++src_y, ++y)
+	for (src_y = src_y_start + sy, y = 0; src_y < (src_y_start + sy + th); ++src_y, ++y)
 	{
-		for (src_x = src_x_start, x = 0; src_x < (src_x_start + src_width); ++src_x, ++x)
+		for (src_x = src_x_start + sx, x = 0; src_x < (src_x_start + sx + tw); ++src_x, ++x)
 		{
-			dst_x = dst_x_start + x;
-			dst_y = dst_y_start + y;
+			dst_x = ir.left + x;
+			dst_y = ir.top + y;
 			src_loc = src_pixels + src_pitch * src_y + src_x * channels;
 			dst_loc = dst_pixels + dst_pitch * dst_y + dst_x * channels;
 			if (chroma_key->b == *src_loc &&
@@ -504,9 +606,9 @@ void rasterizer_copy_pixels_color_replace_subimage_chromakey(
 				dst_loc += 4;
 			}
 			else {
-				*dst_loc++ = newcolor->b; 
-				*dst_loc++ = newcolor->g;
 				*dst_loc++ = newcolor->b;
+				*dst_loc++ = newcolor->g;
+				*dst_loc++ = newcolor->r;
 				*dst_loc = newcolor->a;
 				src_loc += 4;
 			}

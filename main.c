@@ -11,12 +11,19 @@ unsigned char *realimage;
 unsigned char *realimage_clone;
 unsigned char *checkerimage;
 unsigned char *gradientimage;
+
+
+unsigned char *birdimage;
+int birdimagewidth, birdimageheight;
+
 int realimagewidth;
 int realimageheight;
 swr_rfont* font;
-swr_color textcolor = { 0, 0, 255, 255 };
+swr_color textcolor = { 255, 255, 255, 255 };
 
 float velx = 100.0f;
+
+int dx = 0, dy = 0;
 
 void rotating_line(swr_sdl_context *ctx)
 {
@@ -65,38 +72,55 @@ void test_line()
 
 void moving_gradient(swr_sdl_context *ctx)
 {
-	static float x = 0;
+	static float x = -256;
 	rasterizer_copy_pixels(x, 0, 256, 256, gradientimage);
 	x += velx * ctx->lastFrameTime;
 	if (x > ctx->screen_texture_pixels_wide) {
-		x = 0;
+		x = -256;
 	}
 }
 
 void moving_checker(swr_sdl_context *ctx)
 {
-	static float x = 0;
+	static float x = -256;
 	rasterizer_copy_pixels(x, 600 - 256, 256, 256, checkerimage);
 	x += velx * ctx->lastFrameTime;
 	if (x > ctx->screen_texture_pixels_wide) {
-		x = 0;
+		x = -256;
 	}
 }
 
 void moving_lena(swr_sdl_context *ctx)
 {
 	char buf[256];
-	static float x = 0;
+	static float x = -256;
 	rasterizer_copy_pixels(x, 0, realimagewidth, realimageheight, realimage);
 	//rasterizer_copy_pixels_subimage(x, 0, 100, 100, 256, 256, realimagewidth, realimageheight, realimage);
 	x += velx * ctx->lastFrameTime;
 	if (x > ctx->screen_texture_pixels_wide) {
-		x = 0;
+		x = -256;
 	}
 	sprintf(buf, "Lena pos %d", x);
 //	rasterizer_draw_text(font, 100, 80, buf);
-	rasterizer_draw_text_with_color(font, &textcolor, 100, 80, buf);
+	rasterizer_draw_text_with_color(font, &textcolor, 100+dx, 80+dy, buf);
 }
+
+void movable_text(swr_sdl_context *ctx)
+{
+	rasterizer_draw_text(font, 100+dx, 20+dy, "Unit Tests");
+}
+
+void movable_bird(swr_sdl_context *ctx)
+{
+	swr_color green = {0,255,0,255};
+	rasterizer_copy_pixels_chromakey(dx, dy, birdimagewidth, birdimageheight, &green, birdimage);
+}
+
+void movable_portionofimage(swr_sdl_context *ctx)
+{
+	rasterizer_copy_pixels_subimage(200+dx, 200+dy, 238, 248, 53, 33, realimagewidth, realimageheight, realimage);
+}
+
 
 void unit_tests(swr_sdl_context *ctx)
 {
@@ -108,7 +132,9 @@ void unit_tests(swr_sdl_context *ctx)
 	moving_gradient(ctx);
 	rasterizer_draw_rect(10, 10, 640 - 10, 480 - 10);
 	rotating_line(ctx);
-	rasterizer_draw_text(font, 100, 20, "Unit Tests");
+	movable_text(ctx);
+	movable_bird(ctx);
+	movable_portionofimage(ctx);
 }
 
 void capture_screen()
@@ -132,6 +158,18 @@ int input(SDL_Event* e)
 			return 1;
 		case SDL_SCANCODE_F12:
 			capture_screen();
+			break;
+		case SDL_SCANCODE_LEFT:
+			--dx;
+			break;
+		case SDL_SCANCODE_RIGHT:
+			++dx;
+			break;
+		case SDL_SCANCODE_UP:
+			--dy;
+			break;
+		case SDL_SCANCODE_DOWN:
+			++dy;
 			break;
 		}
 	}
@@ -340,6 +378,8 @@ int main(int argc, char **argv)
 
 	realimage = read_ppm_raw("Lenaclor.ppm",LE, &realimagewidth, &realimageheight);
 	realimage_clone = clone_image(realimage, realimagewidth, realimageheight, 4);
+
+	birdimage = read_ppm_raw("bird.ppm", LE, &birdimagewidth, &birdimageheight);
 	
 	swr_sdl_create_context(800, 600);
 	swr_sdl_set_input_handler(input);
@@ -399,6 +439,8 @@ int main(int argc, char **argv)
 	destroy_image(realimage);
 	destroy_font(font);
 	destroy_image(realimage_clone);
+	destroy_image(birdimage);
+
 	swr_sdl_destroy_context();
 	return 0;
 }
