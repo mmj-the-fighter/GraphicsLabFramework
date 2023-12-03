@@ -1,7 +1,8 @@
 Reference: https://www.libsdl.org/
 How to setup GraphicsLabFramework for building in Visual Studio.
 ------------------------------------------------------------------------------
-
+0) Make an empty project and copy all files of GraphicsLabFramework into it 
+Add .h and .c files to the project
 
 1) Download and unzip the following in a folder of your convenience.
 ------------------------------------------------------------------------------
@@ -41,3 +42,5 @@ Type in the following
 SDL2.lib
 SDL2main.lib
 
+Also you need to include _CRT_SECURE_NO_WARNINGS preprocessor definition
+Refer here for how to set that: https://stackoverflow.com/questions/22450423/how-to-use-crt-secure-no-warnings
