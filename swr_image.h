@@ -7,6 +7,9 @@ extern "C" {
 
 	enum ByteOrder { LE, BE };
 
+	/* load png using stb lib */
+	unsigned char * read_png_using_stb(const char *filename, int *textureWidth, int *textureHeight);
+
 	/* save image in bmp format*/
 	void write_bmp(const char* filename, unsigned char* pixels, int width, int height);
 
