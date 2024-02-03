@@ -5,6 +5,47 @@
 #include <ctype.h>
 #include "swr_pixel.h"
 #include "swr_image.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+unsigned char * read_png_using_stb(const char *filename, int *textureWidth, int *textureHeight)
+{
+	int w, h, bpp;
+	int num_of_pixels;
+	int i;
+	unsigned char *srcloc, *dstloc;
+	unsigned char *image;
+	/* stbi_info(filename, &textureWidth, &textureHeight, &bytesPerPixel); */
+	unsigned char* imgdata_stb = stbi_load(filename, &w, &h, &bpp, STBI_rgb_alpha);
+	if (imgdata_stb == NULL) {
+		*textureWidth = 0;
+		*textureHeight = 0;
+		printf("Loading png file %s failed.", filename);
+		return NULL;
+	}
+
+	num_of_pixels = w * h;
+	image = (unsigned char *)malloc(num_of_pixels * 4 * sizeof(unsigned char));
+	dstloc = image;
+	srcloc = imgdata_stb;
+
+	unsigned char rgba[4];
+	for (i = 0; i < num_of_pixels; ++i) {
+		rgba[0] = *srcloc++;
+		rgba[1] = *srcloc++;
+		rgba[2] = *srcloc++;
+		rgba[3] = *srcloc++;
+		*dstloc++ = rgba[2];
+		*dstloc++ = rgba[1];
+		*dstloc++ = rgba[0];
+		*dstloc++ = rgba[3];
+	}
+	*textureWidth = w;
+	*textureHeight = h;
+	stbi_image_free(imgdata_stb);
+	return image;
+}
+
 
 void write_bmp(const char* filename, unsigned char* pixels, int width, int height)
 {
