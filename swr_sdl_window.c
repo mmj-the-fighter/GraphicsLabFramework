@@ -67,10 +67,11 @@ int swr_sdl_create_context(
 	context.screen_textue_pixels_size_in_bytes = context.screen_texture_pitch * resolution_y;
 	context.screen_texture_pixels = (unsigned char*)malloc(context.screen_textue_pixels_size_in_bytes);
 	context.screen_texture_pixels_wide = resolution_x;
-	context.screen_texture_pixels_high = resolution_y;
+	context.screen_texture_pixels_high = resolution_y;	
 
-	/* create depth buffer if requested */
-	/* TODO: */
+	
+	/* Uncomment this if you want the application in full screen mode */
+	/* SDL_SetWindowFullscreen(context.window, SDL_WINDOW_FULLSCREEN); */
 
 	return 0;
 }
