@@ -23,6 +23,7 @@ in order to run the program.
 Note:  
 Images format used for this project is PPM.  
 You may need programs like GIMP, IrfanView or Photoshop to work with PPM files.  
+Upate(4-Feb-2024): Support for loading png files added using the stb_image library  
   
 Core:  
 The core of this program is a function which calls  
