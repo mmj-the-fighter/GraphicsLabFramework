@@ -293,6 +293,94 @@ void blur_image_boxfilter(unsigned char *img, int kernelSize, int width, int hei
 	free(kernel);
 }
 
+int clamp(int value, int min, int max) {
+	if (value <= min) {
+		return min;
+	}
+	else if (value >= max) {
+		return max;
+	}
+	else{
+		return value;
+	}
+}
+/*fast*/
+void blur_image_boxfilter_seperable_convolution_boundary_replicate(unsigned char *img, int kernelSize, int width, int height)
+{
+	int i, j;
+	int x, y;
+	int nk = kernelSize*kernelSize;
+	int halfKernelSize = kernelSize / 2;
+	float oneOverNk = 1.0f / (float)kernelSize;
+	float* kernelH = (float*)malloc(sizeof(float)*kernelSize);
+	float* kernelV = (float*)malloc(sizeof(float)*kernelSize);
+	for (i = 0; i < kernelSize; i++){
+		kernelH[i] = oneOverNk;
+		kernelV[i] = oneOverNk;
+	}
+
+	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
+
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
+			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			*outbuffer = 255;
+			*(outbuffer + 1) = 255;
+			*(outbuffer + 2) = 255;
+			*(outbuffer + 3) = 255;
+		}
+	}
+
+	//apply filter horizontally
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
+			float bs = 0.0;
+			float gs = 0.0;
+			float rs = 0.0;
+			for (i = -halfKernelSize; i <= halfKernelSize; ++i) {
+				int horizontalSamplingLocation = clamp(x + i, 0, width - 1);
+				unsigned char* buffer = img + (width * 4 * y) + horizontalSamplingLocation * 4;
+				float weight = kernelH[i + halfKernelSize];
+				bs += weight * *buffer;
+				gs += weight * *(buffer + 1);
+				rs += weight * *(buffer + 2);
+			}
+			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			*outbuffer = bs;
+			*(outbuffer + 1) = gs;
+			*(outbuffer + 2) = rs;
+			*(outbuffer + 3) = 255;
+		}
+	}
+
+	//apply filter vertically
+	for (y = 0; y < height; ++y) {
+		for (x = 0; x < width; ++x) {
+			float bs = 0.0;
+			float gs = 0.0;
+			float rs = 0.0;
+			for (i = -halfKernelSize; i <= halfKernelSize; ++i) {
+				int verticalSamplingLocation = clamp(y + i, 0, height - 1);
+				unsigned char* buffer = img + (width * 4 * verticalSamplingLocation) + x * 4;
+				float weight = kernelV[i + halfKernelSize];
+				bs += weight * *buffer;
+				gs += weight * *(buffer + 1);
+				rs += weight * *(buffer + 2);
+			}
+			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			*outbuffer = bs;
+			*(outbuffer + 1) = gs;
+			*(outbuffer + 2) = rs;
+			*(outbuffer + 3) = 255;
+		}
+	}
+
+	memcpy(img, resimage, width*height * 4);
+	free(kernelH);
+	free(kernelV);
+	free(resimage);
+}
+
 
 void sobel_edge_detect(unsigned char *img, int width, int height)
 {
