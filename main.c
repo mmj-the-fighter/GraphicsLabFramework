@@ -305,31 +305,30 @@ int clamp(int value, int min, int max) {
 	}
 }
 /*fast*/
-void blur_image_boxfilter_seperable_convolution_boundary_replicate(unsigned char *img, int kernelSize, int width, int height)
+void blur_image_boxfilter_separable_convolution(unsigned char *src_img, int kernel_size, int width, int height)
 {
 	int i, j;
 	int x, y;
-	int nk = kernelSize*kernelSize;
-	int halfKernelSize = kernelSize / 2;
-	float oneOverNk = 1.0f / (float)kernelSize;
-	float* kernelH = (float*)malloc(sizeof(float)*kernelSize);
-	float* kernelV = (float*)malloc(sizeof(float)*kernelSize);
-	for (i = 0; i < kernelSize; i++){
-		kernelH[i] = oneOverNk;
-		kernelV[i] = oneOverNk;
+	const int channels = 4;
+	int half_kernel_size = kernel_size / 2;
+
+	//allocate kernels
+	float* horiz_kernel = (float*) malloc(sizeof(float) * kernel_size);
+	float* vert_kernel = (float*) malloc(sizeof(float) * kernel_size);
+
+	//init horizontal and vertical kernels (for box filtering)
+	float filter_value = 1.0f / (float)kernel_size;
+	for (i = 0; i < kernel_size; i++) {
+		horiz_kernel[i] = filter_value;
+		vert_kernel[i] = filter_value;
 	}
 
-	unsigned char* resimage = (unsigned char *)malloc(width * height * 4 * sizeof(unsigned char));
+	//allocate temporary buffers
+	unsigned char* fully_filtered_img =
+		(unsigned char *)malloc(width * height * channels * sizeof(unsigned char));
+	unsigned char* horiz_filtered_img =
+		(unsigned char *)malloc(width * height * channels * sizeof(unsigned char));
 
-	for (y = 0; y < height; ++y) {
-		for (x = 0; x < width; ++x) {
-			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
-			*outbuffer = 255;
-			*(outbuffer + 1) = 255;
-			*(outbuffer + 2) = 255;
-			*(outbuffer + 3) = 255;
-		}
-	}
 
 	//apply filter horizontally
 	for (y = 0; y < height; ++y) {
@@ -337,19 +336,24 @@ void blur_image_boxfilter_seperable_convolution_boundary_replicate(unsigned char
 			float bs = 0.0;
 			float gs = 0.0;
 			float rs = 0.0;
-			for (i = -halfKernelSize; i <= halfKernelSize; ++i) {
-				int horizontalSamplingLocation = clamp(x + i, 0, width - 1);
-				unsigned char* buffer = img + (width * 4 * y) + horizontalSamplingLocation * 4;
-				float weight = kernelH[i + halfKernelSize];
+			for (i = -half_kernel_size; i <= half_kernel_size; ++i) {
+				int sample_location_x = clamp(x + i, 0, width - 1); //boundary value padding
+				unsigned char* buffer = src_img +
+					(width * channels * y) +
+					(sample_location_x * channels);
+				float weight = horiz_kernel[i + half_kernel_size];
 				bs += weight * *buffer;
 				gs += weight * *(buffer + 1);
 				rs += weight * *(buffer + 2);
 			}
-			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+			unsigned char* outbuffer =
+				horiz_filtered_img +
+				(width * channels * y) +
+				(x * channels);
 			*outbuffer = bs;
 			*(outbuffer + 1) = gs;
 			*(outbuffer + 2) = rs;
-			*(outbuffer + 3) = 255;
+			*(outbuffer + 3) = 255; //alpha
 		}
 	}
 
@@ -359,27 +363,40 @@ void blur_image_boxfilter_seperable_convolution_boundary_replicate(unsigned char
 			float bs = 0.0;
 			float gs = 0.0;
 			float rs = 0.0;
-			for (i = -halfKernelSize; i <= halfKernelSize; ++i) {
-				int verticalSamplingLocation = clamp(y + i, 0, height - 1);
-				unsigned char* buffer = img + (width * 4 * verticalSamplingLocation) + x * 4;
-				float weight = kernelV[i + halfKernelSize];
+			for (i = -half_kernel_size; i <= half_kernel_size; ++i) {
+				int sample_location_y = clamp(y + i, 0, height - 1); //boundary value padding
+				unsigned char* buffer =
+					horiz_filtered_img +
+					(width * channels * sample_location_y) +
+					(x * channels);
+				float weight = vert_kernel[i + half_kernel_size];
 				bs += weight * *buffer;
 				gs += weight * *(buffer + 1);
 				rs += weight * *(buffer + 2);
 			}
-			unsigned char* outbuffer = resimage + width * 4 * y + x * 4;
+
+			unsigned char* outbuffer =
+				fully_filtered_img +
+				(width * channels * y) +
+				(x * channels);
+
 			*outbuffer = bs;
 			*(outbuffer + 1) = gs;
 			*(outbuffer + 2) = rs;
-			*(outbuffer + 3) = 255;
+			*(outbuffer + 3) = 255; //alpha
 		}
 	}
 
-	memcpy(img, resimage, width*height * 4);
-	free(kernelH);
-	free(kernelV);
-	free(resimage);
+	//change the source image to filtered
+	memcpy(src_img, fully_filtered_img, width*height * channels);
+
+	//free temporary buffers
+	free(horiz_kernel);
+	free(vert_kernel);
+	free(horiz_filtered_img);
+	free(fully_filtered_img);
 }
+
 
 
 void sobel_edge_detect(unsigned char *img, int width, int height)
