@@ -398,6 +398,27 @@ void blur_image_boxfilter_separable_convolution(unsigned char *src_img, int kern
 }
 
 
+int minval(int a, int b){
+	return (a <= b) ? a : b;
+}
+
+void sepia_filter(unsigned char *img, int width, int height){
+	double b, g, r;
+	int nb, ng, nr;
+	unsigned int n = width * height*4;
+	for (unsigned int i = 0; i < n; i+=4) {
+		b = img[i];
+		g = img[i+1];
+		r = img[i+2];
+		nb = 0.272 * r + 0.534 * g + 0.131 * b;
+		ng = 0.349 * r + 0.686 * g + 0.168 * b;
+		nr = 0.393 * r + 0.769 * g + 0.189 * b;
+		img[i] = minval(nb, 255);
+		img[i + 1] = minval(ng, 255);
+		img[i + 2] = minval(ng, 255);
+	}
+}
+
 
 void sobel_edge_detect(unsigned char *img, int width, int height)
 {
